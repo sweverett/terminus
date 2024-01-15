@@ -2,7 +2,7 @@
 Where you would put a foundation for things to come
 
 This module contains a variety of utility functions and classes that I have found generally useful for many python projects in astronomy. These include:
-- `pdb`` for multiprocessing
+- `pdb` for multiprocessing
 - A class for automatic, simultaneous logging and printing
 - Unified yaml reading and writing
 - Config parsing & checking
