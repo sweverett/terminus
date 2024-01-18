@@ -1,6 +1,8 @@
 import subprocess
 import sys
 
+from terminus.logging import LogPrint
+
 import pdb
 
 class ForkedPdb(pdb.Pdb):
