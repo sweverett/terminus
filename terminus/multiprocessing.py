@@ -19,7 +19,7 @@ class ForkedPdb(pdb.Pdb):
 
         return
 
-def decode(msg):
+def decode(msg: (str | bytes | None)):
     if isinstance(msg, str):
         return msg
     elif isinstance(msg, bytes):
@@ -30,7 +30,7 @@ def decode(msg):
         print(f'Warning: message={msg} is not a string or bytes')
         return msg
 
-def run_command(cmd, logprint=None, silent=False):
+def run_command(cmd: str, logprint: LogPrint=None, silent: bool=False):
 
     if logprint is None:
         # Just remap to print then
@@ -70,7 +70,6 @@ def run_command(cmd, logprint=None, silent=False):
 
         rc = process.poll()
 
-
         if rc:
             stdout, stderr = process.communicate()
             if silent is False:
@@ -84,7 +83,7 @@ def run_command(cmd, logprint=None, silent=False):
 
     return rc
 
-def setup_batches(nobjs, ncores):
+def setup_batches(nobjs: int, ncores: int):
     '''
     Create list of batch indices for each core
     '''

@@ -88,7 +88,7 @@ def check_req_fields(config: dict, req: list, name: str=None):
 
     return
 
-def parse_config(config: dict, req: list=None, opt: dict=None, name: str=None, allow_unregistered: bool=False) -> dict:
+def parse_config(config: dict, req: list=None, opt: dict=None, name: str=None, allow_unregistered: bool=False, set_defaults=True) -> dict:
     '''
     config: dict
         A configuration dictionary to parse
@@ -100,6 +100,8 @@ def parse_config(config: dict, req: list=None, opt: dict=None, name: str=None, a
         Name of config type, for extra print info
     allow_unregistered: bool
         Set to allow fields not registered as a req or optional field
+    set_defaults: bool
+        Whether to explicitly set all optional fields to their registered default if they are not present in the config
     '''
 
     if (config is not None) and (not isinstance(config, dict)):
@@ -129,20 +131,24 @@ def parse_config(config: dict, req: list=None, opt: dict=None, name: str=None, a
                 raise ValueError(f'{field} not a valid field for {name}config!')
 
     # set defaults for any optional field not present in config
-    for field, value in opt.items():
-        if field not in config:
-            if isintance(value, tuple):
-                if len(value) != 2:
-                    raise ValueError('opt tuple must be in the format of (type, default_value)')
-                field_type = value[0]
-                default = value[1]
+    if set_defaults is True:
+        for field, value in opt.items():
+            if field not in config:
+                if isintance(value, tuple):
+                    if len(value) != 2:
+                        raise ValueError('opt tuple must be in the format of (type, default_value)')
+                    field_type = value[0]
+                    default = value[1]
 
-                if not isinstance(default, field_type):
-                    raise TypeError(f'{name}config[{field}] must be a {field_type}')
-            else:
-                field_type = None
-                default = value
+                    if not isinstance(default, field_type):
+                        raise TypeError(f'{name}config[{field}] must be a {field_type}')
+                else:
+                    field_type = None
+                    default = value
 
-            config[field] = value
+                if field_type is not None:
+                    if not isinstance(default, field_type):
+                        raise TypeError(f'{name}config[{field}] registered default must be a {field_type}')
+                config[field] = default
 
     return config
