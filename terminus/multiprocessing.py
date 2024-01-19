@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import numpy as np
 
 from terminus.logging import LogPrint
 
