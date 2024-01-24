@@ -71,7 +71,7 @@ def check_req_fields(config: dict, req: list, name: str=None):
     '''
 
     for entry in req:
-        if isinstance(entry, 'str'):
+        if isinstance(entry, str):
             field = entry
             field_type = None
         elif isinstance(entry, tuple):
@@ -134,7 +134,7 @@ def parse_config(config: dict, req: list=None, opt: dict=None, name: str=None, a
     if set_defaults is True:
         for field, value in opt.items():
             if field not in config:
-                if isintance(value, tuple):
+                if isinstance(value, tuple):
                     if len(value) != 2:
                         raise ValueError('opt tuple must be in the format of (type, default_value)')
                     field_type = value[0]
