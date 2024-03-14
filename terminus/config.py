@@ -24,13 +24,22 @@ def read_yaml(yaml_file):
         # return yaml.safe_load(stream) # see above issue
         return yaml.load(stream, Loader=loader)
 
-def write_yaml(yaml_dict, yaml_outfile):
+def write_yaml(yaml_dict: dict, yaml_outfile: str, clobber: bool=False):
     '''
     yaml_dict: dict
         The dictionary to save to a yaml config file
     yaml_outfile: str
         The path of the output config file
+    clobber: bool
+        Whether to overwrite the file if it already exists
     '''
+
+    yaml_outfile = Path(yaml_outfile)
+    if yaml_outfile.exists():
+        if clobber is False:
+            raise ValueError(f'{yaml_outfile} already exists! Set clobber=True to overwrite')
+        else:
+            yaml_outfile.unlink()
 
     with open(yaml_outfile, 'w') as yaml_file:
         yaml.dump(yaml_dict, yaml_file, default_flow_style=False)
