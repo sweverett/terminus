@@ -47,6 +47,28 @@ def write_yaml(yaml_dict: dict, yaml_outfile: str, clobber: bool=False):
 
     return
 
+def recursive_update(d: dict, u: dict) -> dict:
+    '''
+    Recursively update a dictionary with another dictionary, similarly to dict.update()
+
+    d: dict
+        The dictionary to update
+    u: dict
+        The dictionary to update with
+
+    returns:
+    d: dict
+        The updated dictionary
+    '''
+
+    for k, v in u.items():
+        if isinstance(v, dict):
+            d[k] = recursive_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+
+    return d
+
 def check_req_params(config, params, defaults):
     '''
     Ensure that certain required parameters have their values set to
