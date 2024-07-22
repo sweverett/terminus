@@ -33,7 +33,7 @@ def copy_tree(src, dst, overwrite=False, raise_existing_error=True):
         The destination directory path to copy to
     overwrite: bool
         Whether to overwrite files in the destination directory
-    raise_error: bool
+    raise_existing_error: bool
         Whether to raise an error if the destination file already exists and
         overwrite is False
     '''
@@ -49,7 +49,10 @@ def copy_tree(src, dst, overwrite=False, raise_existing_error=True):
         dst_item = dst / item.name
         
         if src_item.is_dir():
-            copy_tree(src_item, dst_item, overwrite=overwrite)
+            copy_tree(
+                src_item, dst_item, overwrite=overwrite,
+                raise_existing_error=raise_existing_error
+                )
         if dst_item.exists():
             if (overwrite is False) and (raise_existing_error is True):
                 raise FileExistsError(
