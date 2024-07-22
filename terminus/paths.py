@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 def rm_tree(path):
@@ -20,6 +21,42 @@ def rm_tree(path):
 
     return
 
+def copy_tree(src, dst, overwrite=False):
+    '''
+    Recursive directory copy, with optional overwrite
+
+    Parameters
+    ----------
+    src: str, Path
+        The source directory path to copy
+    dst: str, Path
+        The destination directory path to copy to
+    overwrite: bool
+        Whether to overwrite files in the destination directory. Will
+        raise an error if False and a file already exists in the destination
+    '''
+
+    src = Path(src)
+    dst = Path(dst)
+
+    if not dst.exists():
+        dst.mkdir(parents=True)
+    
+    for item in src.iterdir():
+        src_item = item
+        dst_item = dst / item.name
+        
+        if src_item.is_dir():
+            copy_tree(src_item, dst_item, overwrite=overwrite)
+        if dst_item.exists():
+            if overwrite is False:
+                raise FileExistsError(
+                    f'{dst_item} already exists and overwrite=False'
+                )
+        shutil.copy2(src_item, dst_item)
+
+    return
+
 # -----------------------------------------------------------------------------
 # TODO: The following methods need to be refatored to use pathlib, as well as
 # accept modules as inputs for them to solve the pathing
@@ -28,7 +65,10 @@ def make_dir(d):
     '''
     Makes dir if it does not already exist
 
-    d: str, pathlib.Path
+    Parmeters
+    ---------
+    d: str, Path
+        The directory path to create
     '''
 
     if isinstance(d, Path):
