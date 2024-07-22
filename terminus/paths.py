@@ -21,7 +21,7 @@ def rm_tree(path):
 
     return
 
-def copy_tree(src, dst, overwrite=False):
+def copy_tree(src, dst, overwrite=False, raise_existing_error=True):
     '''
     Recursive directory copy, with optional overwrite
 
@@ -32,8 +32,10 @@ def copy_tree(src, dst, overwrite=False):
     dst: str, Path
         The destination directory path to copy to
     overwrite: bool
-        Whether to overwrite files in the destination directory. Will
-        raise an error if False and a file already exists in the destination
+        Whether to overwrite files in the destination directory
+    raise_error: bool
+        Whether to raise an error if the destination file already exists and
+        overwrite is False
     '''
 
     src = Path(src)
@@ -49,7 +51,7 @@ def copy_tree(src, dst, overwrite=False):
         if src_item.is_dir():
             copy_tree(src_item, dst_item, overwrite=overwrite)
         if dst_item.exists():
-            if overwrite is False:
+            if (overwrite is False) and (raise_existing_error is True):
                 raise FileExistsError(
                     f'{dst_item} already exists and overwrite=False'
                 )
