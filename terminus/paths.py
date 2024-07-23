@@ -53,12 +53,13 @@ def copy_tree(src, dst, overwrite=False, raise_existing_error=True):
                 src_item, dst_item, overwrite=overwrite,
                 raise_existing_error=raise_existing_error
                 )
-        if dst_item.exists():
-            if (overwrite is False) and (raise_existing_error is True):
-                raise FileExistsError(
-                    f'{dst_item} already exists and overwrite=False'
-                )
-        shutil.copy2(src_item, dst_item)
+        else:
+            if dst_item.exists():
+                if (overwrite is False) and (raise_existing_error is True):
+                    raise FileExistsError(
+                        f'{dst_item} already exists and overwrite=False'
+                    )
+            shutil.copy2(src_item, dst_item)
 
     return
 
