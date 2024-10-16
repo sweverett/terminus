@@ -52,7 +52,7 @@ def download_file(url: str, output_dir: Path, vb: bool = True) -> Path:
         The URL of the file to download.
     output_dir : str, Path
         The directory where the file should be saved.
-    vb: bool; default=True
+    vb: bool
         Whether to print download status updates to the terminal.
 
     Returns
@@ -84,13 +84,16 @@ def download_file(url: str, output_dir: Path, vb: bool = True) -> Path:
                 f.write(chunk)
                 downloaded_size += len(chunk)
                 if vb and total_size > 0:
+                    percent_complete = (downloaded_size / total_size) * 100
                     print(
-                        f'Downloaded {downloaded_size / 1024:.2f} KB of '
-                        f'{total_size / 1024:.2f} KB', end='\r')
+                        f'Downloaded {downloaded_size / 1024:,.2f} KB of '
+                        f'{total_size / 1024:,.2f} KB '
+                        f'({percent_complete:.2f}%)', end='\r'
+                        )
 
     if vb:
         print(
-            f'\nDownload complete: {downloaded_size / 1024:.2f} KB downloaded.'
+            f'\nDownload complete: {downloaded_size / 1024:,.2f} KB downloaded.'
             )
 
     return local_filename
