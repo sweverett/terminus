@@ -41,7 +41,7 @@ import requests
 
 #     return local_filename
 
-def download_file(url: str, output_dir: Path, vb: bool = False) -> Path:
+def download_file(url: str, output_dir: Path, vb: bool = True) -> Path:
     '''
     Downloads a file from a given URL and saves it to the specified output 
     directory, with an optional verbose flag to show download progress.
@@ -52,7 +52,7 @@ def download_file(url: str, output_dir: Path, vb: bool = False) -> Path:
         The URL of the file to download.
     output_dir : str, Path
         The directory where the file should be saved.
-    vb: bool
+    vb: bool; default=True
         Whether to print download status updates to the terminal.
 
     Returns
