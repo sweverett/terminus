@@ -67,21 +67,33 @@ def copy_tree(src, dst, overwrite=False, raise_existing_error=True):
 # TODO: The following methods need to be refatored to use pathlib, as well as
 # accept modules as inputs for them to solve the pathing
 
-def make_dir(d):
+def make_dir(d: str | Path | None, exists_ok: bool = True) -> None: 
     '''
-    Makes dir if it does not already exist
+    Makes dir if it does not already exist.
 
     Parmeters
     ---------
     d: str, Path
         The directory path to create
+    exists_ok: bool; default=True
+        Whether to raise an error if the directory already exists. Default is
+        True.
     '''
+
+    # this can occasionally happen if insufficient parsing is done before
+    # calling this method; usually it is most useful to ignore
+    if d is None:
+        return
 
     if isinstance(d, Path):
         d = str(d.resolve())
 
     if not os.path.exists(d):
         os.makedirs(d)
+    elif not exists_ok:
+        raise FileExistsError(
+            f'{d} already exists and exists_ok=False'
+            )
 
     return
 
