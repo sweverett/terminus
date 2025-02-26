@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terminus"
+version = "0.0.1"
+description = "Where you put the tools to build your foundation"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Spencer Everett", email = "sweveret@caltech.edu" }
+]
+dependencies = [
+    "numpy",
+    "astropy",
+    "pyyaml",
+]
+
+[project.urls]
+Homepage = "https://github.com/sweverett/terminus"
+Repository = "https://github.com/sweverett/terminus"
+
+[tool.setuptools]
+packages = ["terminus"]
