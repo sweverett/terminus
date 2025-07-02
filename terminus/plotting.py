@@ -2,7 +2,9 @@
 A collection of helper methods and classes for simplified plotting calls
 '''
 
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 from pathlib import Path
 
