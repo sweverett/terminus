@@ -1,6 +1,9 @@
 import yaml
 import re
+import dataclasses
+import numpy as np
 from pathlib import Path
+from collections.abc import Mapping, Sequence
 
 def read_yaml(yaml_file):
     '''
@@ -35,15 +38,63 @@ def write_yaml(yaml_dict: dict, yaml_outfile: str, clobber: bool=False):
         Whether to overwrite the file if it already exists
     '''
 
+    # some helper methods to handle annoyances with variable references and a few
+    # common python types
+    class NoAliasDumper(yaml.SafeDumper):
+        # Prevent &id / *id anchors
+        def ignore_aliases(self, data):
+            return True
+
+    def _to_plain(obj):
+        """Deep-convert to plain Python types safe for YAML/JSON."""
+        # dataclasses
+        if dataclasses.is_dataclass(obj):
+            obj = dataclasses.asdict(obj)
+
+        # pydantic v1/v2
+        if hasattr(obj, "model_dump"):
+            obj = obj.model_dump()
+        elif hasattr(obj, "dict"):
+            obj = obj.dict()
+
+        # numpy scalars
+        if isinstance(obj, (np.generic,)):
+            return obj.item()
+
+        # pathlib
+        if isinstance(obj, Path):
+            return str(obj)
+
+        # mappings
+        if isinstance(obj, Mapping):
+            return {str(k): _to_plain(v) for k, v in obj.items()}
+
+        # sequences (but not strings/bytes)
+        if isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray)):
+            return [_to_plain(v) for v in obj]
+
+        # basic types
+        return obj
+
     yaml_outfile = Path(yaml_outfile)
+
     if yaml_outfile.exists():
         if clobber is False:
             raise ValueError(f'{yaml_outfile} already exists! Set clobber=True to overwrite')
         else:
             yaml_outfile.unlink()
 
-    with open(yaml_outfile, 'w') as yaml_file:
-        yaml.dump(yaml_dict, yaml_file, default_flow_style=False)
+    plain = _to_plain(yaml_dict)
+
+    with open(yaml_outfile, 'w', encoding='utf-8') as f:
+        yaml.dump(
+            plain,
+            f,
+            Dumper=NoAliasDumper,   # Safe dumper + no anchors
+            sort_keys=False,
+            default_flow_style=False,
+            allow_unicode=True,
+        )
 
     return
 
