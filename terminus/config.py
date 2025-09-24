@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import yaml
 import re
 import dataclasses
 import numpy as np
-from pathlib import Path
+import os, datetime, dataclasses, enum, uuid, decimal
+from pathlib import Path, PurePath
 from collections.abc import Mapping, Sequence
 
 def read_yaml(yaml_file):
@@ -51,29 +54,53 @@ def write_yaml(yaml_dict: dict, yaml_outfile: str, clobber: bool=False):
         if dataclasses.is_dataclass(obj):
             obj = dataclasses.asdict(obj)
 
-        # pydantic v1/v2
+        # pydantic v2 / v1
         if hasattr(obj, "model_dump"):
             obj = obj.model_dump()
-        elif hasattr(obj, "dict"):
+        elif hasattr(obj, "dict") and callable(obj.dict):
             obj = obj.dict()
 
-        # numpy scalars
-        if isinstance(obj, (np.generic,)):
-            return obj.item()
+        # pathlib / os.PathLike -> str
+        if isinstance(obj, (PurePath, os.PathLike)):
+            return os.fspath(obj)
 
-        # pathlib
-        if isinstance(obj, Path):
+        # enum -> its value (or name if you prefer)
+        if isinstance(obj, enum.Enum):
+            return obj.value
+
+        # uuid -> str
+        if isinstance(obj, uuid.UUID):
             return str(obj)
 
-        # mappings
+        # decimal -> float (or str if you want exact text)
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+
+        # numpy scalars / arrays
+        if np is not None:
+            if isinstance(obj, np.generic):
+                return obj.item()
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+
+        # datetime/date/time -> ISO
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.isoformat()
+
+        # mappings (dict-like, including subclasses)
         if isinstance(obj, Mapping):
+            # Force string keys; YAML allows non-str keys but it complicates consumers
             return {str(k): _to_plain(v) for k, v in obj.items()}
+
+        # sets & tuples -> lists
+        if isinstance(obj, (set, tuple)):
+            return [_to_plain(v) for v in obj]
 
         # sequences (but not strings/bytes)
         if isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray)):
             return [_to_plain(v) for v in obj]
 
-        # basic types
+        # basic scalar stays as-is (int/float/str/bool/None)
         return obj
 
     yaml_outfile = Path(yaml_outfile)
@@ -86,14 +113,46 @@ def write_yaml(yaml_dict: dict, yaml_outfile: str, clobber: bool=False):
 
     plain = _to_plain(yaml_dict)
 
-    with open(yaml_outfile, 'w', encoding='utf-8') as f:
-        yaml.dump(
-            plain,
-            f,
-            Dumper=NoAliasDumper,   # Safe dumper + no anchors
-            sort_keys=False,
-            default_flow_style=False,
-            allow_unicode=True,
+    # helper method to handle representation errors for the next YAML write call
+    def _find_first_unrepresentable(x, path=""):
+        """Return (path, typename, preview) for the first value yaml can't represent."""
+        try:
+            yaml.dump(x, Dumper=NoAliasDumper)
+            return None  # whole object is representable
+        except yaml.representer.RepresenterError:
+            pass
+
+        if isinstance(x, dict):
+            for k, v in x.items():
+                p = f"{path}.{k}" if path else str(k)
+                bad = _find_first_unrepresentable(v, p)
+                if bad:
+                    return bad
+        elif isinstance(x, (list, tuple, set)):
+            for i, v in enumerate(x):
+                p = f"{path}[{i}]" if path else f"[{i}]"
+                bad = _find_first_unrepresentable(v, p)
+                if bad:
+                    return bad
+
+        # Leaf (or non-container) that still fails
+        return (path or "<root>", type(x).__name__, repr(x)[:200])
+
+    try:
+        with open(yaml_outfile, 'w', encoding='utf-8') as f:
+            yaml.dump(
+                plain,
+                f,
+                Dumper=NoAliasDumper,   # Safe dumper + no anchors
+                sort_keys=False,
+                default_flow_style=False,
+                allow_unicode=True,
+            )
+    except yaml.representer.RepresenterError:
+        where, typ, preview = _find_first_unrepresentable(plain)
+        raise TypeError(
+            f"YAML serialization failed at {where} (type {typ}). "
+            f"Example value: {preview}"
         )
 
     return
